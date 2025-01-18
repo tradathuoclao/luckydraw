@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Quay Số May Mắn (Upload UI Fix)</title>
+  <!-- Google font -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Thư viện XLSX -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: "Quicksand", sans-serif;
+      background-color: #cccccc;
+      overflow-x: hidden;
+    }
+    body {
+      text-align: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+      position: relative;
+      transition: background-image 0.5s;
+    }
+    /* STEP 1: methodContainer */
+    #methodContainer {
+      position: absolute; 
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .method-btn {
+      background-color: #1c87c9;
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      font-size: 22px;
+      cursor: pointer;
+      margin: 10px;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+    }
+    .method-btn:hover {
+      background-color: #0b5c8e;
+    }
+
+    /* STEP 2: uploadContainer */
+    #uploadContainer {
+      display: none; 
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 500px;
+    }
+    #uploadContainer h2 {
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .upload-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 15px 0;
+    }
+    /* Sửa phần này */
+    .custom-file-upload {
+      border: 2px solid #ff4a09;
+      display: inline-block;
+      padding: 12px 24px;
+      cursor: pointer;
+      border-radius: 8px;
+      background-color: #ff4a09;
+      color: white;
+      font-size: 18px;
+      transition: background-color 0.3s;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    .custom-file-upload:hover {
+      background-color: #e04300;
+    }
+    .custom-file-upload input[type="file"] {
+      display: none;
+    }
+    /* Kết thúc sửa */
+    .status {
+      font-size: 14px;
+      color: #fffafa;
+      white-space: pre-wrap;
+    }
+    #continueButton {
+      background-color: #4caf50;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 14px 28px;
+      font-size: 20px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s;
+    }
+    #continueButton:hover {
+      background-color: #45a049;
+    }
+
+    /* Range container (step3) */
+    #rangeContainer {
+      display: none;
+      margin-top: 20px;
+    }
+    #rangeForm {
+      background-color: rgba(255,255,255,0.7);
+      padding: 20px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    #rangeForm h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    #rangeForm label {
+      display: block;
+      margin-bottom: 5px;
+      text-align: left;
+      color: #333;
+      font-weight: 600;
+    }
+    #rangeForm input[type="number"] {
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      width: calc(100% - 18px);
+      font-size: 16px;
+    }
+    #rangeForm button {
+      margin-top: 10px;
+      background-color: #4caf50;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #rangeForm button:hover {
+      background-color: #3e8e41;
+    }
+
+    /* configContainer (step4) */
+    #configContainer {
+      display: none; 
+      justify-content: center;
+      margin-top: 20px;
+    }
+    #configForm {
+      background-color: rgba(255,255,255,0.7);
+      padding: 20px;
+      border-radius: 10px;
+      display: inline-block;
+      width: 80%;
+      max-width: 400px;
+    }
+    #configForm h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    #configForm label {
+      display: block;
+      margin-bottom: 5px;
+      text-align: left;
+      color: #333;
+      font-weight: 600;
+    }
+    #configForm input[type="number"] {
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      width: calc(100% - 18px);
+      font-size: 16px;
+    }
+    #configForm button {
+      margin-top: 10px;
+      background-color: #ff4a09;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #configForm button:hover {
+      background-color: #e04300;
+    }
+
+    /* Quay So */
+    #mainTitle, #statusPage, #drawButton {
+      display: none;
+    }
+    #mainTitle {
+      color: #ffffff;
+      font-size: 48px;
+      margin: 40px 0 20px 0;
+    }
+    #statusPage {
+      color: #ffffff;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    #drawButton {
+      background-color: #ff4a09;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 15px 32px;
+      font-size: 24px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s;
+    }
+    #drawButton:hover {
+      background-color: #e04300;
+    }
+
+    #spinner {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      margin: 20px auto;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .slot {
+      width: 120px;
+      height: 120px;
+      background-color: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 96px;
+      color: #ffffff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .slot.active {
+      background-color: rgba(255,255,255,0.5);
+      transform: scale(1.1);
+    }
+
+    /* result pop-up */
+    #result {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: rgba(0,0,0,0.5);
+      display: none;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+    #result p {
+      font-size: 28px;
+      margin: 10px 0;
+      color: #ffffff;
+    }
+    #confirmPopupBtn {
+      margin-top: 20px;
+      background-color: #4caf50;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #confirmPopupBtn:hover {
+      background-color: #45a049;
+    }
+
+    /* winnersList */
+    #winnersList {
+      margin: 30px auto;
+      color: white;
+      text-align: left;
+      display: none;
+      width: 80%;
+      max-width: 800px;
+    }
+    #winnersList h2 {
+      border-bottom: 2px solid white;
+      padding-bottom: 5px;
+      text-align: center;
+    }
+
+    /* full screen + music control */
+    #controlButtons {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .small-btn {
+      font-size: 14px;
+      padding: 8px 12px;
+      background-color: #ff4a09;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2),
+                  0 6px 20px rgba(0,0,0,0.19);
+      transition: background-color 0.3s;
+    }
+    .small-btn:hover {
+      background-color: #e04300;
+    }
+
+    /* Thêm CSS cho hộp thoại */
+    #exportDialog {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 10; /* Đảm bảo hộp thoại nổi lên trên */
+    }
+
+    #exportDialog p {
+      margin: 0 0 20px 0;
+      color: #333;
+      font-size: 18px;
+    }
+
+    #exportDialog button {
+      background-color: #4caf50;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 0 10px;
+    }
+
+    #exportDialog button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- STEP 1: Chọn loại quay -->
+  <div id="methodContainer">
+    <h2 style="color:white;">Chọn loại quay số</h2>
+    <button class="method-btn" onclick="chooseRandom()">Quay Ngẫu Nhiên</button>
+    <button class="method-btn" onclick="chooseList()">Quay Theo Danh Sách</button>
+  </div>
+
+  <!-- STEP 2: Upload Container (Music, BG, optional Excel) -->
+  <div id="uploadContainer" style="display:none;">
+    <h2>Vui lòng upload file</h2>
+
+    <div class="upload-row">
+      <label class="custom-file-upload">
+        <input type="file" id="musicFile" accept="audio/*" />
+        <span>Chọn nhạc nền</span>
+      </label>
+      <p id="musicStatus" class="status"></p>
+    </div>
+
+    <div class="upload-row">
+      <label class="custom-file-upload">
+        <input type="file" id="bgFile" accept="image/*" />
+        <span>*Chọn hình nền*</span>
+      </label>
+      <p id="bgStatus" class="status"></p>
+    </div>
+
+    <div class="upload-row" id="excelSection" style="display:none;">
+      <label class="custom-file-upload">
+        <input type="file" id="excelFile" accept=".xlsx, .xls" />
+        <span>*Thêm danh sách*</span>
+      </label>
+      <p id="excelStatus" class="status"></p>
+    </div>
+
+    <button id="continueButton" onclick="checkUpload()">Tiếp Tục</button>
+  </div>
+
+  <!-- STEP 3: rangeContainer -->
+  <div id="rangeContainer" style="display:none;">
+    <form id="rangeForm">
+      <h2>Nhập Vùng Số (Quay Ngẫu Nhiên)</h2>
+      <label for="minNumber">Số bắt đầu:</label>
+      <input type="number" id="minNumber" value="1" placeholder="VD: 1" />
+      <label for="maxNumber">Số kết thúc:</label>
+      <input type="number" id="maxNumber" value="100" placeholder="VD: 9999" />
+      <button type="button" onclick="confirmRange()">Xác nhận Range</button>
+    </form>
+  </div>
+
+  <!-- STEP 4: configContainer -->
+  <div id="configContainer" style="display:none;">
+    <form id="configForm">
+      <h2>Cấu hình giải thưởng</h2>
+      <label for="giaiKhuyenKhich">Giải Khuyến Khích:</label>
+      <input type="number" id="giaiKhuyenKhich" value="0" min="0" placeholder="Số lượng..." />
+      <label for="giaiBa">Giải Ba:</label>
+      <input type="number" id="giaiBa" value="0" min="0" placeholder="Số lượng..." />
+      <label for="giaiNhi">Giải Nhì:</label>
+      <input type="number" id="giaiNhi" value="0" min="0" placeholder="Số lượng..." />
+      <label for="giaiNhat">Giải Nhất:</label>
+      <input type="number" id="giaiNhat" value="0" min="0" placeholder="Số lượng..." />
+      <label for="giaiDacBiet">Giải Đặc Biệt:</label>
+      <input type="number" id="giaiDacBiet" value="0" min="0" placeholder="Số lượng..." />
+      <button type="button" onclick="confirmConfig()">Confirm</button>
+    </form>
+  </div>
+
+  <!-- Quay số -->
+  <h1 id="mainTitle" style="display:none;">LUCKY DRAW</h1>
+  <p id="statusPage" style="display:none;"></p>
+  <button id="drawButton" onclick="drawWinner()" style="display:none;">QUAY SỐ</button>
+  <div id="spinner" class="spinner" style="display:none;"></div>
+
+  <!-- Pop-up KQ -->
+  <div id="result" class="result" style="display:none;">
+    <p id="popupMessage"></p>
+    <button id="confirmPopupBtn" onclick="confirmPopup()">Xác nhận</button>
+  </div>
+
+  <!-- DS trúng giải -->
+  <div id="winnersList" style="display:none;">
+    <h2>Danh Sách Trúng Giải</h2>
+    <ul id="winners"></ul>
+  </div>
+
+  <!-- Hộp thoại hỏi xuất file Excel -->
+  <div id="exportDialog">
+    <p>Bạn có muốn xuất kết quả ra file Excel không?</p>
+    <button onclick="exportToExcel()">Có</button>
+    <button onclick="hideExportDialog()">Không</button>
+  </div>
+
+  <!-- Fullscreen + Music -->
+  <div id="controlButtons" style="display:none;">
+    <button class="small-btn" onclick="toggleFullscreen()">Fullscreen</button>
+    <button class="small-btn" id="musicToggleBtn" onclick="toggleMusic()">Pause Music</button>
+  </div>
+
+  <script>
+    // Flags
+    let useRandom=false;
+    let useList=false;
+
+    // Data
+    let employees=[];
+    let remainingEmployees=[];
+    let winners=[];
+    let prizesConfig={};
+
+    // State
+    let hasLoadedBg=false;
+    let hasLoadedExcel=false;
+    let hasLoadedMusic=false;
+    let musicAudio=null;
+
+    // Range
+    let minNum=1;
+    let maxNum=100;
+    let maxLen=3; 
+
+    // Tạm
+    let lastWinner=null;
+    let lastPrize=null;
+
+    /* STEP 1 */
+    function chooseRandom(){
+      useRandom=true;
+      useList=false;
+      document.getElementById("methodContainer").style.display="none";
+      document.getElementById("uploadContainer").style.display="block";
+      document.getElementById("excelSection").style.display="none";
+    }
+    function chooseList(){
+      useRandom=false;
+      useList=true;
+      document.getElementById("methodContainer").style.display="none";
+      document.getElementById("uploadContainer").style.display="block";
+      document.getElementById("excelSection").style.display="block";
+    }
+
+    /* STEP 2 */
+    function checkUpload(){
+      if(!hasLoadedBg){
+        alert("Chưa load background!");
+        return;
+      }
+      if(useList && !hasLoadedExcel){
+        alert("Chưa load file Excel!");
+        return;
+      }
+      // Ok => hide
+      document.getElementById("uploadContainer").style.display="none";
+
+      if(useRandom){
+        document.getElementById("rangeContainer").style.display="block";
+      } else {
+        showConfigContainer();
+      }
+
+      if(musicAudio){
+        musicAudio.play().catch(err=> console.warn("chặn autoplay:",err));
+      }
+    }
+
+    /* STEP 3 */
+    function confirmRange(){
+      const minVal=parseInt(document.getElementById("minNumber").value,10);
+      const maxVal=parseInt(document.getElementById("maxNumber").value,10);
+      if(isNaN(minVal)||isNaN(maxVal)||minVal>=maxVal){
+        alert("Range không hợp lệ!");
+        return;
+      }
+      minNum=minVal;
+      maxNum=maxVal;
+      maxLen=maxNum.toString().length;
+
+      document.getElementById("rangeContainer").style.display="none";
+      showConfigContainer();
+    }
+
+    /* STEP 4 */
+    function showConfigContainer(){
+      document.getElementById("configContainer").style.display="flex";
+    }
+
+    function confirmConfig(){
+      const g1=parseInt(document.getElementById("giaiKhuyenKhich").value,10);
+      const g2=parseInt(document.getElementById("giaiBa").value,10);
+      const g3=parseInt(document.getElementById("giaiNhi").value,10);
+      const g4=parseInt(document.getElementById("giaiNhat").value,10);
+      const g5=parseInt(document.getElementById("giaiDacBiet").value,10);
+
+      prizesConfig={
+        "Giải Khuyến Khích": g1,
+        "Giải Ba": g2,
+        "Giải Nhì": g3,
+        "Giải Nhất": g4,
+        "Giải Đặc Biệt": g5
+      };
+
+      if(useList){
+        remainingEmployees=[...employees];
+      }
+
+      document.getElementById("configContainer").style.display="none";
+
+      document.getElementById("mainTitle").style.display="block";
+      document.getElementById("statusPage").style.display="block";
+      document.getElementById("statusPage").innerText="Hãy bấm QUAY SỐ để bắt đầu...";
+      document.getElementById("drawButton").style.display="inline-block";
+      document.getElementById("spinner").style.display="flex";
+      document.getElementById("result").style.display="none";
+      document.getElementById("winnersList").style.display="block";
+      document.getElementById("controlButtons").style.display="flex";
+
+      if(musicAudio){
+        musicAudio.play().catch(err=> console.warn("autoplay:",err));
+      }
+    }
+
+    /* Upload BG */
+    document.getElementById("bgFile").addEventListener("change",function(e){
+      const file=e.target.files[0];
+      if(!file)return;
+      if(!file.type.startsWith("image/")){
+        document.getElementById("bgStatus").innerText="File không phải ảnh!";
+        return;
+      }
+      const r=new FileReader();
+      r.onload=(ev)=>{
+        document.body.style.backgroundImage=`url('${ev.target.result}')`;
+        document.getElementById("bgStatus").innerText="Background đã load.";
+        hasLoadedBg=true;
+      };
+      r.onerror=(err)=>{
+        document.getElementById("bgStatus").innerText="Lỗi load ảnh:"+err;
+      };
+      r.readAsDataURL(file);
+    });
+
+    /* Upload music */
+    document.getElementById("musicFile").addEventListener("change",function(e){
+      const file=e.target.files[0];
+      if(!file)return;
+      if(!file.type.startsWith("audio/")){
+        document.getElementById("musicStatus").innerText="File không phải audio!";
+        return;
+      }
+      const r=new FileReader();
+      r.onload=(ev)=>{
+        musicAudio=new Audio(ev.target.result);
+        musicAudio.loop=true;
+        document.getElementById("musicStatus").innerText="Nhạc đã load.";
+        hasLoadedMusic=true;
+      };
+      r.onerror=(err)=>{
+        document.getElementById("musicStatus").innerText="Lỗi nhạc:"+err;
+      };
+      r.readAsDataURL(file);
+    });
+
+    /* Upload excel */
+    document.getElementById("excelFile").addEventListener("change", async function(e){
+      const file=e.target.files[0];
+      if(!file)return;
+      const excelStatus=document.getElementById("excelStatus");
+      excelStatus.innerText="Đang tải file Excel...";
+      try{
+        await readExcelFile(file);
+        if(employees.length===0){
+          excelStatus.innerText="Không có dữ liệu nhân sự hợp lệ!";
+          return;
+        }
+        excelStatus.innerText=`Đã tải lên ${employees.length} nhân sự.`;
+        hasLoadedExcel=true;
+      }catch(error){
+        excelStatus.innerText="Đã xảy ra lỗi:"+error;
+      }
+    });
+    async function readExcelFile(file){
+      return new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=(ev)=>{
+          try{
+            const bstr=ev.target.result;
+            const wb=XLSX.read(bstr,{type:'binary'});
+            const firstSheet=wb.SheetNames[0];
+            const ws= wb.Sheets[firstSheet];
+            const json=XLSX.utils.sheet_to_json(ws,{header:1});
+            if(json.length<2){
+              reject("File Excel không đủ dữ liệu!");
+              return;
+            }
+            const headers=json[0].map(h=> typeof h==='string'?h.trim().toLowerCase():'');
+            const manhansuIndex=headers.indexOf('manhansu');
+            const hovatenIndex=headers.indexOf('hovaten');
+            if(manhansuIndex===-1||hovatenIndex===-1){
+              reject("Excel phải có cột 'manhansu' & 'hovaten'!");
+              return;
+            }
+            employees=[];
+            for(let i=1;i<json.length;i++){
+              const row=json[i];
+              if(!row||row.length===0)continue;
+              const manhansu=row[manhansuIndex];
+              const hovaten=row[hovatenIndex];
+              if(manhansu&&hovaten){
+                employees.push({
+                  manhansu:manhansu.toString().trim(),
+                  hovaten:hovaten.toString().trim()
+                });
+              }
+            }
+            resolve();
+          }catch(err){
+            reject("Lỗi đọc file:"+err);
+          }
+        };
+        reader.onerror=(err)=>reject("Lỗi file excel:"+err);
+        reader.readAsBinaryString(file);
+      });
+    }
+
+    /* Quay Số */
+    function drawWinner(){
+      const statusPage=document.getElementById("statusPage");
+      if(Object.keys(prizesConfig).length===0){
+        statusPage.innerText="Vui lòng cấu hình trước!";
+        return;
+      }
+      const totalLeft=Object.values(prizesConfig).reduce((a,b)=>a+b,0);
+      if(totalLeft<=0){
+        statusPage.innerText="Đã quay hết tất cả các giải!";
+        return;
+      }
+
+      let currentPrize=null;
+      for(let p in prizesConfig){
+        if(prizesConfig[p]>0){
+          currentPrize=p; break;
+        }
+      }
+      if(!currentPrize){
+        statusPage.innerText="Đã quay hết tất cả các giải!";
+        return;
+      }
+      statusPage.innerText=`Đang quay số cho ${currentPrize}...`;
+
+      let winnerRecord=null;
+      if(useList){
+        if(remainingEmployees.length===0){
+          statusPage.innerText="Không còn ai!";
+          return;
+        }
+        const idx=Math.floor(Math.random()*remainingEmployees.length);
+        const chosen= remainingEmployees[idx];
+        remainingEmployees.splice(idx,1);
+        winnerRecord={
+          manhansu: chosen.manhansu,
+          hovaten: chosen.hovaten
+        };
+      } else {
+        // random range, zero-pad
+        const rangeSize=(maxNum-minNum)+1;
+        const randomVal= minNum + Math.floor(Math.random()*rangeSize);
+        const numStr= randomVal.toString().padStart(maxLen,"0");
+        winnerRecord={
+          manhansu:numStr,
+          hovaten:""
+        };
+      }
+
+      // Tạo slot
+      const spinner=document.getElementById("spinner");
+      spinner.innerHTML="";
+      const wId= winnerRecord.manhansu;
+      const slotArray=[];
+
+      for(let i=0;i<wId.length;i++){
+        const sDiv=document.createElement("div");
+        sDiv.className="slot active";
+        sDiv.innerText="-";
+        spinner.appendChild(sDiv);
+        slotArray.push(sDiv);
+      }
+
+      document.getElementById("result").style.display="none";
+      lastWinner=winnerRecord; lastPrize=currentPrize;
+
+      const startAnim=()=>{
+        slotArray.forEach(s=>{
+          s.interval=setInterval(()=>{
+            s.innerText=Math.floor(Math.random()*10);
+          },100);
+        });
+      };
+      const stopAnim=()=>{
+        for(let i=0;i<slotArray.length;i++){
+          setTimeout(()=>{
+            clearInterval(slotArray[i].interval);
+            slotArray[i].innerText=wId[i];
+            slotArray[i].classList.remove("active");
+            if(i=== slotArray.length-1){
+              displayWinner(lastWinner,lastPrize);
+            }
+          },2000+ i*2000);
+        }
+      };
+      startAnim();
+      stopAnim();
+    }
+
+    function displayWinner(winner, prize){
+      const pop=document.getElementById("result");
+      pop.style.display="block";
+
+      if(useRandom){
+        // "Xin chúc mừng người có con số may mắn 00X"
+        const msg= `Xin chúc mừng con số may mắn <strong>${winner.manhansu}</strong> 
+                    <br>đã trúng giải <strong>${prize}</strong>!`;
+        document.getElementById("popupMessage").innerHTML= msg;
+      } else {
+        // DS => "Mã: X, Họ: Y"
+        const msg=`Xin chúc mừng <strong>${winner.hovaten}</strong> <br>(Mã nhân sự: <strong>${winner.manhansu}<strong>) 
+                   <br>đã trúng giải <strong>${prize}</strong>!`;
+        document.getElementById("popupMessage").innerHTML= msg;
+      }
+    }
+
+    function confirmPopup(){
+      addWinnerToTable(lastWinner,lastPrize);
+      prizesConfig[lastPrize]--;
+      document.getElementById("result").style.display="none";
+
+      // Hiển thị hộp thoại confirm lưu file Excel nếu đã quay hết giải
+      const totalLeft = Object.values(prizesConfig).reduce((a, b) => a + b, 0);
+      if (totalLeft === 0) {
+        showExportDialog();
+      }
+    }
+
+    function addWinnerToTable(winner, prizeType){
+      winners.push({ winner: winner, prizeType: prizeType});
+      const wList=document.getElementById("winners");
+      wList.innerHTML="";
+
+      winners.forEach(item=>{
+        const li=document.createElement("li");
+        if(useRandom){
+          // "Con số may mắn: X - Giải: Y"
+          li.innerHTML=`Con số may mắn: <strong>${item.winner.manhansu}</strong> 
+                        - Giải: <strong>${item.prizeType}</strong>`;
+        } else {
+          li.innerHTML=`Mã nhân sự: <strong>${item.winner.manhansu}</strong> 
+                        - Họ và tên: <strong>${item.winner.hovaten}</strong> 
+                        - Giải: <strong>${item.prizeType}</strong>`;
+        }
+        wList.appendChild(li);
+      });
+    }
+
+    /* Fullscreen */
+    function toggleFullscreen(){
+      if(!document.fullscreenElement){
+        document.documentElement.requestFullscreen().catch(err=>{
+          console.warn("fullscreen err:", err);
+        });
+      } else {
+        document.exitFullscreen().catch(err=>{
+          console.warn("exit fullscreen err:",err);
+        });
+      }
+    }
+
+    /* Music toggle */
+    function toggleMusic(){
+      if(!musicAudio){
+        alert("Chưa chọn nhạc!");
+        return;
+      }
+      const btn=document.getElementById("musicToggleBtn");
+      if(musicAudio.paused){
+        musicAudio.play().catch(err=>{
+          console.warn("Play music err:",err);
+        });
+        btn.textContent="Pause Music";
+      } else {
+        musicAudio.pause();
+        btn.textContent="Play Music";
+      }
+    }
+
+    /* Hiển thị hộp thoại hỏi xuất file Excel */
+    function showExportDialog() {
+      document.getElementById("exportDialog").style.display = "block";
+    }
+
+    /* Ẩn hộp thoại hỏi xuất file Excel */
+    function hideExportDialog() {
+      document.getElementById("exportDialog").style.display = "none";
+    }
+
+    /* Xuất file Excel */
+    function exportToExcel() {
+      // Tạo một workbook mới
+      const wb = XLSX.utils.book_new();
+
+      // Tạo một worksheet mới
+      const ws = XLSX.utils.aoa_to_sheet([
+        // Header
+        ["Mã số", "Họ và tên", "Giải thưởng"],
+        // Data (duyệt qua mảng winners)
+        ...winners.map(item => [
+          item.winner.manhansu,
+          useList ? item.winner.hovaten : "",
+          item.prizeType,
+        ]),
+      ]);
+
+      // Thêm worksheet vào workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Kết quả quay số");
+
+      // Xuất file Excel
+      XLSX.writeFile(wb, "ket-qua-quay-so.xlsx");
+
+      // Ẩn hộp thoại
+      hideExportDialog();
+    }
+  </script>
+</body>
+</html>
